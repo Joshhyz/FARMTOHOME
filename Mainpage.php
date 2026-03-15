@@ -247,7 +247,58 @@ Simple and transparent.
 </section>
 
 
+<section class="benefits-section">
 
+    <div class="benefits-header">
+        <h2>Benefits for Everyone</h2>
+        <p>Empowering farmers and delighting customers</p>
+    </div>
+
+    <!-- FARMERS SIDE -->
+    <div class="benefit-row">
+        <div class="benefit-image-card">
+            <img src="images/farmer-benefit.jpg" alt="Farmer">
+            <div class="benefit-badge top-badge">
+                <h3>85%</h3>
+                <span>Higher Earnings</span>
+            </div>
+        </div>
+
+        <div class="benefit-content">
+            <h3 class="benefit-title">🌱 For Farmers</h3>
+
+            <div class="benefit-list">
+                <div class="benefit-item">✔ Sell directly without middlemen and earn more</div>
+                <div class="benefit-item">✔ Easy inventory management and order tracking</div>
+                <div class="benefit-item">✔ Direct communication with customers</div>
+                <div class="benefit-item">✔ Build your reputation and customer base</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUYERS SIDE -->
+    <div class="benefit-row reverse-row">
+        <div class="benefit-content">
+            <h3 class="benefit-title">🛍️ For Buyers</h3>
+
+            <div class="benefit-list">
+                <div class="benefit-item">✔ Fresh produce directly from local farms</div>
+                <div class="benefit-item">✔ Fair prices without middleman markup</div>
+                <div class="benefit-item">✔ Know exactly where your food comes from</div>
+                <div class="benefit-item">✔ Support local agriculture and farmers</div>
+            </div>
+        </div>
+
+        <div class="benefit-image-card">
+            <img src="images/buyer-benefit.jpg" alt="Buyer">
+            <div class="benefit-badge bottom-badge">
+                <h3>100%</h3>
+                <span>Farm Fresh</span>
+            </div>
+        </div>
+    </div>
+
+</section>
 
 
 
