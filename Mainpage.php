@@ -303,29 +303,122 @@ Simple and transparent.
 
 
 
+<section class="testimonials-section">
+
+    <div class="testimonials-header">
+        <h2>What Our Community Says</h2>
+        <p>Real stories from real people</p>
+    </div>
+
+    <div class="testimonials-container">
+
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="testimonial-text">
+                “The produce is so fresh! I love knowing exactly where my vegetables come from.”
+            </p>
+
+            <div class="testimonial-user">
+                <img src="images/user1.jpg" alt="Sarah Johnson">
+                <div>
+                    <h4>Sarah Johnson</h4>
+                    <span>Home Cook</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="testimonial-text">
+                “Direct connection with farmers means better quality and better prices for my restaurant.”
+            </p>
+
+            <div class="testimonial-user">
+                <img src="images/user2.jpg" alt="Mike Chen">
+                <div>
+                    <h4>Mike Chen</h4>
+                    <span>Restaurant Owner</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="testimonial-text">
+                “Supporting local farmers while eating organic has never been easier!”
+            </p>
+
+            <div class="testimonial-user">
+                <img src="images/user3.jpg" alt="Emily Davis">
+                <div>
+                    <h4>Emily Davis</h4>
+                    <span>Health Enthusiast</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+<section class="cta-full">
+    <div class="cta-section">
+        <h2>Ready to Get Started?</h2>
+        <p>Join thousands of farmers and customers already using FarmToHome</p>
+
+        <div class="cta-buttons">
+            <a href="register.php" class="cta-btn-primary">Create Free Account</a>
+            <a href="products.php" class="cta-btn-outline">Explore Marketplace</a>
+        </div>
+    </div>
+</section>
 
 
 
 
 
 
-
-
-
-
-
-
-
-<!-- FOOTER -->
 <footer class="footer">
-<div class="footer-content">
-<p>&copy; 2026 FarmToHome. All rights reserved.</p>
-<div class="footer-links">
-<a href="#">Privacy Policy</a>
+
+<div class="footer-container">
+
+<!-- BRAND -->
+<div class="footer-brand">
+<h3>🌱 FarmToHome</h3>
+<p>Connecting farmers and consumers for a sustainable future.</p>
+</div>
+
+<!-- QUICK LINKS -->
+<div class="footer-column">
+<h4>Quick Links</h4>
+<a href="products.php">Browse</a>
+<a href="#how-it-works">How It Works</a>
+<a href="#benefits">Benefits</a>
+</div>
+
+<!-- FOR FARMERS -->
+<div class="footer-column">
+<h4>For Farmers</h4>
+<a href="register.php">Sign Up</a>
+<a href="login.php">Login</a>
+</div>
+
+<!-- LEGAL -->
+<div class="footer-column">
+<h4>Legal</h4>
 <a href="#">Terms of Service</a>
+<a href="#">Privacy Policy</a>
 <a href="#">Contact Us</a>
 </div>
+
 </div>
+
+<div class="footer-bottom">
+<p>© 2026 FarmToHome. All rights reserved.</p>
+</div>
+
 </footer>
 
 </body>
