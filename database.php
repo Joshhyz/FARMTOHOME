@@ -2,7 +2,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "farm_market";
+$database = "farmtohome_db";
 
 $conn = mysqli_connect($host, $username, $password, $database);
 

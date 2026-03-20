@@ -1,6 +1,7 @@
 <?php
 session_start();
-include "config/database.php";
+include "database.php";
+include "configmailer.php"; // ✅ FIXED PATH
 
 $mode = isset($_GET['mode']) ? $_GET['mode'] : 'login';
 $message = "";
@@ -8,27 +9,34 @@ $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    // ================= LOGIN =================
     if ($_POST["action"] == "login") {
         $email = trim($_POST["email"]);
 
         $checkUser = mysqli_query($conn, "SELECT * FROM users WHERE email = '$email'");
 
         if (mysqli_num_rows($checkUser) > 0) {
+
             $code = rand(100000, 999999);
 
             $_SESSION["verification_code"] = $code;
             $_SESSION["auth_email"] = $email;
             $_SESSION["auth_type"] = "login";
 
-            // later: send email here
-            $message = "Verification code sent to $email";
-            header("Location: verify_code.php");
-            exit();
+            // ✅ SEND EMAIL HERE
+            if(sendVerificationCode($email, $code)){
+                header("Location: verifycode.php");
+                exit();
+            } else {
+                $error = "Failed to send verification email.";
+            }
+
         } else {
             $error = "No account found with that email. Please sign up first.";
         }
     }
 
+    // ================= SIGNUP =================
     if ($_POST["action"] == "signup") {
         $role = trim($_POST["role"]);
         $name = trim($_POST["name"]);
@@ -43,6 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } elseif ($password !== $confirm_password) {
             $error = "Passwords do not match.";
         } else {
+
             $code = rand(100000, 999999);
 
             $_SESSION["verification_code"] = $code;
@@ -52,10 +61,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["signup_password"] = password_hash($password, PASSWORD_DEFAULT);
             $_SESSION["signup_role"] = $role;
 
-            // later: send email here
-            $message = "Verification code sent to $email";
-            header("Location: verify_code.php");
-            exit();
+            // ✅ SEND EMAIL HERE
+            if(sendVerificationCode($email, $code)){
+                header("Location: verifycode.php");
+                exit();
+            } else {
+                $error = "Failed to send verification email.";
+            }
         }
     }
 }
@@ -71,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 
 <div class="auth-page">
-    <a class="back-home" href="index.php">← Back to home</a>
+    <a class="back-home" href="Mainpage.php"></a>
 
     <div class="auth-box">
         <div class="auth-logo">🌱 <span>FarmToHome</span></div>
@@ -144,6 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </p>
             </form>
         <?php } ?>
+
     </div>
 </div>
 
