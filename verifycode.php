@@ -42,7 +42,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             unset($_SESSION["verification_code"], $_SESSION["auth_type"], $_SESSION["auth_email"]);
 
-            header("Location: Mainpage.php");
+            if ($_SESSION["user_role"] == "farmer") {
+                header("Location: dashboard.php");
+            } else {
+                header("Location: buyproduct.php");
+            }
             exit();
         }
 
@@ -71,7 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["signup_role"]
             );
 
-            header("Location: Mainpage.php");
+            if ($_SESSION["user_role"] == "farmer") {
+                header("Location: dashboard.php");
+            } else {
+                header("Location: buyproduct.php");
+            }
             exit();
         }
 
@@ -80,7 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

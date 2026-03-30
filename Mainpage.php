@@ -18,7 +18,7 @@ session_start();
     </div>
 
     <nav>
-        <a href="products.php">Browse</a>
+        <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">Browse</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#benefits">Benefits</a>
 
@@ -30,10 +30,10 @@ session_start();
             <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                 <a href="dashboard.php">Dashboard</a>
             <?php } else { ?>
-                <a href="orderhistory.php">My Orders</a>
+                <a href="buyproduct.php">Marketplace</a>
             <?php } ?>
 
-            <a class="logout-btn" href="Mainpage.php">Logout</a>
+            <a class="logout-btn" href="logout.php">Logout</a>
         <?php } else { ?>
             <a href="registration.php?mode=login">Login</a>
             <a class="btn-start" href="registration.php?mode=signup">Get Started</a>
@@ -57,13 +57,15 @@ session_start();
         </p>
 
         <div class="hero-buttons">
-            <a class="btn-primary" href="products.php">Browse Fresh Produce →</a>
+            <a class="btn-primary" href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">
+                Browse Fresh Produce →
+            </a>
 
             <?php if (isset($_SESSION["user_id"])) { ?>
                 <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                     <a class="btn-outline" href="dashboard.php">Go to Farmer Dashboard</a>
                 <?php } else { ?>
-                    <a class="btn-outline" href="products.php">Start Shopping</a>
+                    <a class="btn-outline" href="buyproduct.php">Start Shopping</a>
                 <?php } ?>
             <?php } else { ?>
                 <a class="btn-outline" href="registration.php?mode=signup">Sell as a Farmer</a>
@@ -97,6 +99,8 @@ session_start();
     </div>
 
     <div class="produce-container">
+
+        <!-- Product 1 -->
         <div class="product-card">
             <div class="product-image">
                 <img src="images/potatoes.jpg" alt="Fresh Potatoes">
@@ -116,6 +120,7 @@ session_start();
             </div>
         </div>
 
+        <!-- Product 2 -->
         <div class="product-card">
             <div class="product-image">
                 <img src="images/strawberries.jpg" alt="Organic Strawberries">
@@ -135,6 +140,7 @@ session_start();
             </div>
         </div>
 
+        <!-- Product 3 -->
         <div class="product-card">
             <div class="product-image">
                 <img src="images/mixedvegetables.jpg" alt="Mixed Vegetables">
@@ -152,10 +158,11 @@ session_start();
                 <p class="farmer">👨‍🌾 Mike Harvest</p>
             </div>
         </div>
+
     </div>
 
     <div class="view-products">
-        <a href="products.php">View All Products →</a>
+        <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">View All Products →</a>
     </div>
 </section>
 
@@ -167,6 +174,7 @@ session_start();
     </div>
 
     <div class="steps-container">
+
         <div class="step-card">
             <div class="step-icon">🌱</div>
             <h3>Farmers List Products</h3>
@@ -193,11 +201,13 @@ session_start();
                 Simple and transparent.
             </p>
         </div>
+
     </div>
 </section>
 
 <!-- BENEFITS -->
 <section class="benefits-section" id="benefits">
+
     <div class="benefits-header">
         <h2>Benefits for Everyone</h2>
         <p>Empowering farmers and delighting customers</p>
@@ -244,16 +254,19 @@ session_start();
             </div>
         </div>
     </div>
+
 </section>
 
 <!-- TESTIMONIALS -->
 <section class="testimonials-section">
+
     <div class="testimonials-header">
         <h2>What Our Community Says</h2>
         <p>Real stories from real people</p>
     </div>
 
     <div class="testimonials-container">
+
         <div class="testimonial-card">
             <div class="stars">★★★★★</div>
             <p class="testimonial-text">
@@ -298,7 +311,9 @@ session_start();
                 </div>
             </div>
         </div>
+
     </div>
+
 </section>
 
 <!-- CTA -->
@@ -312,12 +327,12 @@ session_start();
                 <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                     <a href="dashboard.php" class="cta-btn-primary">Go to Dashboard</a>
                 <?php } else { ?>
-                    <a href="products.php" class="cta-btn-primary">Explore Marketplace</a>
+                    <a href="buyproduct.php" class="cta-btn-primary">Explore Marketplace</a>
                 <?php } ?>
                 <a href="logout.php" class="cta-btn-outline">Logout</a>
             <?php } else { ?>
                 <a href="registration.php?mode=signup" class="cta-btn-primary">Create Free Account</a>
-                <a href="products.php" class="cta-btn-outline">Explore Marketplace</a>
+                <a href="registration.php?mode=login" class="cta-btn-outline">Explore Marketplace</a>
             <?php } ?>
         </div>
     </div>
@@ -325,7 +340,9 @@ session_start();
 
 <!-- FOOTER -->
 <footer class="footer">
+
     <div class="footer-container">
+
         <div class="footer-brand">
             <h3>🌱 FarmToHome</h3>
             <p>Connecting farmers and consumers for a sustainable future.</p>
@@ -333,7 +350,7 @@ session_start();
 
         <div class="footer-column">
             <h4>Quick Links</h4>
-            <a href="products.php">Browse</a>
+            <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">Browse</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#benefits">Benefits</a>
         </div>
@@ -354,11 +371,13 @@ session_start();
             <a href="#">Privacy Policy</a>
             <a href="#">Contact Us</a>
         </div>
+
     </div>
 
     <div class="footer-bottom">
         <p>© 2026 FarmToHome. All rights reserved.</p>
     </div>
+
 </footer>
 
 </body>
