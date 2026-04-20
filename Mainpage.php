@@ -18,7 +18,7 @@ session_start();
     </div>
 
     <nav>
-        <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">Browse</a>
+        <a href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">Browse</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#benefits">Benefits</a>
 
@@ -30,7 +30,7 @@ session_start();
             <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                 <a href="dashboard.php">Dashboard</a>
             <?php } else { ?>
-                <a href="buyproduct.php">Marketplace</a>
+                <a href="marketplace.php">Marketplace</a>
             <?php } ?>
 
             <a class="logout-btn" href="logout.php">Logout</a>
@@ -57,7 +57,7 @@ session_start();
         </p>
 
         <div class="hero-buttons">
-            <a class="btn-primary" href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">
+            <a class="btn-primary" href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">
                 Browse Fresh Produce →
             </a>
 
@@ -65,7 +65,7 @@ session_start();
                 <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                     <a class="btn-outline" href="dashboard.php">Go to Farmer Dashboard</a>
                 <?php } else { ?>
-                    <a class="btn-outline" href="buyproduct.php">Start Shopping</a>
+                    <a class="btn-outline" href="marketplace.php">Start Shopping</a>
                 <?php } ?>
             <?php } else { ?>
                 <a class="btn-outline" href="registration.php?mode=signup">Sell as a Farmer</a>
@@ -162,7 +162,7 @@ session_start();
     </div>
 
     <div class="view-products">
-        <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">View All Products →</a>
+        <a href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">View All Products →</a>
     </div>
 </section>
 
@@ -327,7 +327,7 @@ session_start();
                 <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
                     <a href="dashboard.php" class="cta-btn-primary">Go to Dashboard</a>
                 <?php } else { ?>
-                    <a href="buyproduct.php" class="cta-btn-primary">Explore Marketplace</a>
+                    <a href="marketplace.php" class="cta-btn-primary">Explore Marketplace</a>
                 <?php } ?>
                 <a href="logout.php" class="cta-btn-outline">Logout</a>
             <?php } else { ?>
@@ -350,7 +350,7 @@ session_start();
 
         <div class="footer-column">
             <h4>Quick Links</h4>
-            <a href="<?php echo isset($_SESSION['user_id']) ? 'buyproduct.php' : 'registration.php?mode=login'; ?>">Browse</a>
+            <a href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">Browse</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#benefits">Benefits</a>
         </div>

@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($_SESSION["user_role"] == "farmer") {
                 header("Location: dashboard.php");
             } else {
-                header("Location: buyproduct.php");
+                header("Location: marketplace.php");
             }
             exit();
         }
@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($_SESSION["user_role"] == "farmer") {
                 header("Location: dashboard.php");
             } else {
-                header("Location: buyproduct.php");
+                header("Location: marketplace.php");
             }
             exit();
         }
