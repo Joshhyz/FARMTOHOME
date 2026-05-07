@@ -85,6 +85,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } else {
                 $error = 'Product not found.';
             }
+        } elseif ($action === 'adjust_stock' && $productId > 0) {
+            $adjustAmount = 0;
+            if (isset($_POST['quick_adjust'])) {
+                $adjustAmount = (int) $_POST['quick_adjust'];
+            } elseif (isset($_POST['adjust_quantity'])) {
+                $adjustAmount = (int) $_POST['adjust_quantity'];
+            }
+
+            if ($adjustAmount === 0) {
+                $error = 'Enter a stock amount or use the quick stock buttons.';
+            } else {
+                $checkOwner = mysqli_query($conn, "SELECT farmer_id, stock FROM products WHERE id = $productId");
+                if ($checkOwner && mysqli_num_rows($checkOwner) > 0) {
+                    $row = mysqli_fetch_assoc($checkOwner);
+                    if ((int) $row['farmer_id'] === $currentUserId) {
+                        $currentStock = (int) $row['stock'];
+                        $newStock = $currentStock + $adjustAmount;
+                        if ($newStock < 0) {
+                            $newStock = 0;
+                        }
+
+                        if (mysqli_query($conn, "UPDATE products SET stock = $newStock WHERE id = $productId AND farmer_id = $currentUserId")) {
+                            $message = 'Stock updated successfully!';
+                        } else {
+                            $error = 'Failed to update stock: ' . mysqli_error($conn);
+                        }
+                    } else {
+                        $error = 'Unauthorized: You cannot edit this product.';
+                    }
+                } else {
+                    $error = 'Product not found.';
+                }
+            }
         }
     }
 }
@@ -198,19 +231,47 @@ if (isset($_GET['edit_id'])) {
                             <img src="https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                         </div>
                         <div class="product-info">
+                            <?php
+                                $stockValue = (int) $product['stock'];
+                                if ($stockValue === 0) {
+                                    $statusClass = 'out-of-stock';
+                                    $statusLabel = 'Out of Stock';
+                                } elseif ($stockValue <= 10) {
+                                    $statusClass = 'low-stock';
+                                    $statusLabel = 'Low Stock';
+                                } else {
+                                    $statusClass = 'in-stock';
+                                    $statusLabel = 'In Stock';
+                                }
+                            ?>
+                            <div class="product-status <?php echo $statusClass; ?>">
+                                <?php echo $statusLabel; ?>
+                            </div>
                             <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
                             <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
                             <p class="product-desc"><?php echo htmlspecialchars(substr($product['description'], 0, 100)); ?><?php echo strlen($product['description']) > 100 ? '...' : ''; ?></p>
                             <div class="product-meta">
                                 <div class="product-price">₱<?php echo number_format($product['price'], 2); ?>/kg</div>
-                                <div class="product-stock <?php echo $product['stock'] > 0 ? 'in-stock' : 'out-of-stock'; ?>">
-                                    <?php echo (int) $product['stock']; ?> kg
+                                <div class="product-stock <?php echo $statusClass; ?>">
+                                    <?php echo $stockValue; ?> kg
                                 </div>
                             </div>
                             <div class="product-actions">
                                 <a href="products.php?edit_id=<?php echo (int) $product['id']; ?>" class="btn-edit">✎ Edit</a>
                                 <a href="products.php?delete_id=<?php echo (int) $product['id']; ?>" class="btn-delete" onclick="return confirm('Delete this product?')">🗑 Delete</a>
                             </div>
+                            <form method="POST" class="stock-adjust-form">
+                                <input type="hidden" name="action" value="adjust_stock">
+                                <input type="hidden" name="product_id" value="<?php echo (int) $product['id']; ?>">
+                                <div class="stock-adjust-actions">
+                                    <button type="submit" name="quick_adjust" value="-10" class="btn-stock-quick btn-stock-minus">-10</button>
+                                    <button type="submit" name="quick_adjust" value="10" class="btn-stock-quick btn-stock-plus">+10</button>
+                                </div>
+                                <div class="stock-custom-group">
+                                    <input type="number" name="adjust_quantity" min="1" placeholder="Add amount" class="stock-amount-input">
+                                    <button type="submit" class="btn-add-stock">Update Stock</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -8,19 +8,54 @@ session_set_cookie_params([
     'samesite' => 'Lax'
 ]);
 session_start();
+require_once 'database.php';
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: registration.php?mode=login");
     exit();
 }
 
+$currentUserId = (int) ($_SESSION['user_id'] ?? 0);
 $userName = $_SESSION["user_name"] ?? "User";
 $userRole = strtolower(trim($_SESSION["user_role"] ?? "buyer"));
 $isFarmer = ($userRole === "farmer" || $userRole === "seller");
 
-if (!$isFarmer) {
-    header("Location: dashboard.php");
-    exit();
+$productCount = 0;
+$lowStockCount = 0;
+$activeOrders = 0;
+$totalInventory = 0;
+$totalRevenue = 0.0;
+
+if ($isFarmer && $currentUserId > 0) {
+    $productResult = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM products WHERE farmer_id = $currentUserId");
+    if ($productResult && mysqli_num_rows($productResult) > 0) {
+        $row = mysqli_fetch_assoc($productResult);
+        $productCount = (int) $row['cnt'];
+    }
+
+    $lowResult = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM products WHERE farmer_id = $currentUserId AND stock > 0 AND stock <= 10");
+    if ($lowResult && mysqli_num_rows($lowResult) > 0) {
+        $row = mysqli_fetch_assoc($lowResult);
+        $lowStockCount = (int) $row['cnt'];
+    }
+
+    $orderResult = @mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM orders WHERE farmer_id = $currentUserId");
+    if ($orderResult && mysqli_num_rows($orderResult) > 0) {
+        $row = mysqli_fetch_assoc($orderResult);
+        $activeOrders = (int) $row['cnt'];
+    }
+
+    $inventoryResult = mysqli_query($conn, "SELECT SUM(stock) AS total_stock FROM products WHERE farmer_id = $currentUserId");
+    if ($inventoryResult && mysqli_num_rows($inventoryResult) > 0) {
+        $row = mysqli_fetch_assoc($inventoryResult);
+        $totalInventory = (int) ($row['total_stock'] ?? 0);
+    }
+
+    $revenueResult = @mysqli_query($conn, "SELECT SUM(o.quantity * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.id WHERE p.farmer_id = $currentUserId");
+    if ($revenueResult && mysqli_num_rows($revenueResult) > 0) {
+        $row = mysqli_fetch_assoc($revenueResult);
+        $totalRevenue = (float) ($row['total_revenue'] ?? 0);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -77,19 +112,19 @@ if (!$isFarmer) {
         <section class="overview-cards">
             <div class="overview-card">
                 <div class="overview-card-label">Total Products</div>
-                <div class="overview-card-value">3</div>
+                <div class="overview-card-value"><?php echo $productCount; ?></div>
             </div>
             <div class="overview-card">
-                <div class="overview-card-label">Active Orders</div>
-                <div class="overview-card-value">2</div>
+                <div class="overview-card-label">On-Hand Inventory</div>
+                <div class="overview-card-value"><?php echo $totalInventory; ?> kg</div>
             </div>
             <div class="overview-card">
                 <div class="overview-card-label">Low Stock Alerts</div>
-                <div class="overview-card-value">0</div>
+                <div class="overview-card-value"><?php echo $lowStockCount; ?></div>
             </div>
             <div class="overview-card">
-                <div class="overview-card-label">Total Sales</div>
-                <div class="overview-card-value">₱25.00</div>
+                <div class="overview-card-label">Total Revenue</div>
+                <div class="overview-card-value">₱<?php echo number_format($totalRevenue, 2); ?></div>
             </div>
         </section>
 
