@@ -1,16 +1,12 @@
 /* ====================================
-GLOBAL STYLES
+GLOBAL
 ==================================== */
 
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-html{
-    scroll-behavior:smooth;
+    font-family:'Segoe UI',sans-serif;
 }
 
 body{
@@ -39,7 +35,6 @@ SIDEBAR
     position:sticky;
     top:0;
     height:100vh;
-    overflow-y:auto;
 }
 
 .logo{
@@ -54,7 +49,6 @@ SIDEBAR
     font-size:14px;
     color:#6b7280;
     margin-top:6px;
-    font-weight:500;
 }
 
 .menu{
@@ -64,31 +58,26 @@ SIDEBAR
 }
 
 .menu a{
-    display:flex;
-    align-items:center;
-    gap:12px;
+    text-decoration:none;
     padding:14px 18px;
     border-radius:14px;
-    text-decoration:none;
     color:#374151;
-    font-weight:500;
-    transition:all 0.3s ease;
+    transition:0.3s;
+    font-weight:600;
 }
 
 .menu a:hover{
     background:#dcfce7;
     color:#16a34a;
-    transform:translateX(5px);
 }
 
 .menu .active{
     background:#16a34a;
-    color:#ffffff;
-    box-shadow:0 4px 10px rgba(22,163,74,0.3);
+    color:white;
 }
 
 /* ====================================
-MAIN CONTENT
+MAIN
 ==================================== */
 
 .main{
@@ -104,22 +93,19 @@ TOPBAR
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:35px;
-    background:#ffffff;
+    background:white;
     padding:20px 25px;
     border-radius:18px;
+    margin-bottom:30px;
     box-shadow:0 4px 10px rgba(0,0,0,0.04);
 }
 
 .topbar h1{
     font-size:30px;
-    font-weight:700;
 }
 
 .admin-user{
     color:#6b7280;
-    font-weight:500;
-    font-size:15px;
 }
 
 /* ====================================
@@ -128,38 +114,31 @@ CARDS
 
 .cards{
     display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:20px;
     margin-bottom:30px;
 }
 
 .card{
-    background:#ffffff;
+    background:white;
     padding:25px;
     border-radius:18px;
     box-shadow:0 5px 15px rgba(0,0,0,0.05);
-    transition:0.3s ease;
-    border:1px solid #f1f5f9;
+    transition:0.3s;
 }
 
 .card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 10px 20px rgba(0,0,0,0.08);
+    transform:translateY(-5px);
 }
 
 .card h3{
     color:#6b7280;
     margin-bottom:15px;
-    font-size:16px;
 }
 
 .number{
     font-size:38px;
-    font-weight:700;
-}
-
-.number a{
-    text-decoration:none;
+    font-weight:bold;
 }
 
 .green{
@@ -170,39 +149,24 @@ CARDS
     color:#f97316;
 }
 
-.blue{
-    color:#2563eb;
-}
-
-.red{
-    color:#dc2626;
-}
-
 /* ====================================
-ACTIVITY SECTION
+ACTIVITY
 ==================================== */
 
 .activity{
-    background:#ffffff;
+    background:white;
     padding:25px;
     border-radius:18px;
     box-shadow:0 5px 15px rgba(0,0,0,0.05);
-    margin-bottom:35px;
 }
 
 .activity h2{
     margin-bottom:20px;
-    font-size:24px;
 }
 
 .activity-item{
     padding:18px 0;
     border-bottom:1px solid #f1f5f9;
-    transition:0.3s;
-}
-
-.activity-item:hover{
-    padding-left:8px;
 }
 
 .activity-item:last-child{
@@ -211,48 +175,7 @@ ACTIVITY SECTION
 
 .activity-item p{
     color:#6b7280;
-    margin-top:6px;
-    font-size:14px;
-}
-
-/* ====================================
-SEARCH BOX
-==================================== */
-
-.search,
-.search-box{
-    margin-bottom:20px;
-    background:#ffffff;
-    padding:14px 18px;
-    border-radius:14px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.04);
-}
-
-.search input,
-.search-box input{
-    width:100%;
-    border:none;
-    outline:none;
-    font-size:15px;
-    background:transparent;
-}
-
-.search i{
-    color:#6b7280;
-}
-
-.clear-btn{
-    color:#6b7280;
-    text-decoration:none;
-    font-size:18px;
-    transition:0.3s;
-}
-
-.clear-btn:hover{
-    color:#dc2626;
+    margin-top:5px;
 }
 
 /* ====================================
@@ -260,12 +183,11 @@ TABLE
 ==================================== */
 
 .table-container{
-    background:#ffffff;
+    background:white;
     padding:25px;
     border-radius:18px;
     box-shadow:0 5px 15px rgba(0,0,0,0.05);
     overflow-x:auto;
-    margin-bottom:35px;
 }
 
 table{
@@ -279,14 +201,11 @@ table th{
     background:#f9fafb;
     color:#6b7280;
     border-bottom:1px solid #e5e7eb;
-    font-size:14px;
-    text-transform:uppercase;
 }
 
 table td{
     padding:16px;
     border-bottom:1px solid #f3f4f6;
-    vertical-align:middle;
 }
 
 table tr:hover{
@@ -294,7 +213,7 @@ table tr:hover{
 }
 
 /* ====================================
-PRODUCT & USER INFO
+USER / PRODUCT INFO
 ==================================== */
 
 .product-info,
@@ -318,30 +237,23 @@ PRODUCT & USER INFO
 
 .product-details h4{
     margin-bottom:4px;
-    font-size:15px;
-}
-
-.product-details span{
-    color:#6b7280;
-    font-size:13px;
 }
 
 /* ====================================
-STATUS LABELS
+BADGES
 ==================================== */
 
-.status,
-.badge{
+.badge,
+.status{
     padding:7px 14px;
     border-radius:20px;
     font-size:12px;
     font-weight:600;
-    display:inline-block;
 }
 
-.completed,
 .available,
-.active{
+.active,
+.completed{
     background:#dcfce7;
     color:#16a34a;
 }
@@ -357,20 +269,18 @@ STATUS LABELS
 }
 
 .suspended,
-.out,
 .out-of-stock{
     background:#fee2e2;
     color:#dc2626;
 }
 
 /* ====================================
-ACTION BUTTONS
+ACTIONS
 ==================================== */
 
 .actions{
     display:flex;
-    align-items:center;
-    gap:12px;
+    gap:10px;
 }
 
 .actions a{
@@ -380,9 +290,13 @@ ACTION BUTTONS
     align-items:center;
     justify-content:center;
     border-radius:10px;
+    background:#f3f4f6;
     text-decoration:none;
     transition:0.3s;
-    background:#f3f4f6;
+}
+
+.actions a:hover{
+    transform:scale(1.1);
 }
 
 .view{
@@ -397,41 +311,8 @@ ACTION BUTTONS
     color:#dc2626;
 }
 
-.actions a:hover{
-    transform:scale(1.1);
-    background:#e5e7eb;
-}
-
 /* ====================================
-RESET BUTTON
-==================================== */
-
-.reset-btn{
-    display:inline-block;
-    margin-bottom:20px;
-    padding:10px 18px;
-    background:#16a34a;
-    color:#ffffff;
-    text-decoration:none;
-    border-radius:12px;
-    font-weight:600;
-    transition:0.3s ease;
-}
-
-.reset-btn:hover{
-    background:#15803d;
-}
-
-/* ====================================
-SECTION SPACING
-==================================== */
-
-.section-title{
-    margin:40px 0 20px;
-}
-
-/* ====================================
-FLOATING CHAT BUTTON
+CHAT BUTTON
 ==================================== */
 
 .chat-btn{
@@ -447,44 +328,16 @@ FLOATING CHAT BUTTON
     font-size:26px;
     cursor:pointer;
     box-shadow:0 8px 20px rgba(22,163,74,0.4);
-    transition:0.3s ease;
-    z-index:999;
-}
-
-.chat-btn:hover{
-    transform:scale(1.1) rotate(5deg);
 }
 
 /* ====================================
-SCROLLBAR
-==================================== */
-
-::-webkit-scrollbar{
-    width:8px;
-}
-
-::-webkit-scrollbar-track{
-    background:#f1f5f9;
-}
-
-::-webkit-scrollbar-thumb{
-    background:#16a34a;
-    border-radius:20px;
-}
-
-/* ====================================
-RESPONSIVE DESIGN
+RESPONSIVE
 ==================================== */
 
 @media(max-width:900px){
 
     .sidebar{
         width:90px;
-        padding:20px 10px;
-    }
-
-    .logo{
-        font-size:20px;
     }
 
     .logo span{
@@ -492,8 +345,7 @@ RESPONSIVE DESIGN
     }
 
     .menu a{
-        justify-content:center;
-        font-size:14px;
+        font-size:13px;
     }
 
     .main{
@@ -505,56 +357,19 @@ RESPONSIVE DESIGN
         align-items:flex-start;
         gap:10px;
     }
-
 }
 
-@media(max-width:700px){
+@media(max-width:600px){
 
     .cards{
         grid-template-columns:1fr;
-    }
-
-    table{
-        font-size:14px;
     }
 
     .topbar h1{
         font-size:24px;
     }
 
-    .product-info{
-        flex-direction:column;
-        align-items:flex-start;
+    table{
+        font-size:14px;
     }
-
-    .actions{
-        flex-wrap:wrap;
-    }
-
-}
-
-@media(max-width:500px){
-
-    .main{
-        padding:15px;
-    }
-
-    .topbar{
-        padding:18px;
-    }
-
-    .card{
-        padding:20px;
-    }
-
-    .table-container{
-        padding:15px;
-    }
-
-    .chat-btn{
-        width:55px;
-        height:55px;
-        font-size:22px;
-    }
-
 }
