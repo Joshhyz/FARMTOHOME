@@ -39,7 +39,7 @@ if ($isFarmer && $currentUserId > 0) {
         $lowStockCount = (int) $row['cnt'];
     }
 
-    $orderResult = @mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM orders WHERE farmer_id = $currentUserId");
+    $orderResult = @mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE p.farmer_id = $currentUserId");
     if ($orderResult && mysqli_num_rows($orderResult) > 0) {
         $row = mysqli_fetch_assoc($orderResult);
         $activeOrders = (int) $row['cnt'];
@@ -51,7 +51,7 @@ if ($isFarmer && $currentUserId > 0) {
         $totalInventory = (int) ($row['total_stock'] ?? 0);
     }
 
-    $revenueResult = @mysqli_query($conn, "SELECT SUM(o.quantity * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.id WHERE p.farmer_id = $currentUserId");
+    $revenueResult = @mysqli_query($conn, "SELECT SUM(oi.quantity * oi.price) AS total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE p.farmer_id = $currentUserId");
     if ($revenueResult && mysqli_num_rows($revenueResult) > 0) {
         $row = mysqli_fetch_assoc($revenueResult);
         $totalRevenue = (float) ($row['total_revenue'] ?? 0);
