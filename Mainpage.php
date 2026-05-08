@@ -23,8 +23,7 @@ if ($conn) {
               FROM products p
               JOIN users u ON p.farmer_id = u.id
               WHERE p.stock > 0
-              ORDER BY p.id DESC
-              LIMIT 3";
+              ORDER BY p.id DESC";
 
     $result = mysqli_query($conn, $query);
     if ($result) {
@@ -95,7 +94,7 @@ function getProductImage($category, $productName) {
     </div>
 
     <nav>
-        <a href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">Browse</a>
+        <a href="#produce-section">Browse</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#benefits">Benefits</a>
 
@@ -105,7 +104,7 @@ function getProductImage($category, $productName) {
             </span>
 
             <a href="dashboard.php">Dashboard</a>
-            <a href="marketplace.php">Marketplace</a>
+            <a href="#produce-section">Products</a>
             <a class="logout-btn" href="logout.php">Logout</a>
         <?php } else { ?>
             <a href="registration.php?mode=login">Login</a>
@@ -130,7 +129,7 @@ function getProductImage($category, $productName) {
         </p>
 
         <div class="hero-buttons">
-            <a class="btn-primary" href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">
+            <a class="btn-primary" href="#produce-section">
                 Browse Fresh Produce →
             </a>
 
@@ -161,7 +160,7 @@ function getProductImage($category, $productName) {
 </section>
 
 <!-- PRODUCE SECTION -->
-<section class="produce-section">
+<section class="produce-section" id="produce-section">
     <div class="produce-header">
         <h2>Fresh Produce Available Now</h2>
         <p>Handpicked from local farms, delivered fresh to your doorstep</p>
@@ -204,7 +203,7 @@ function getProductImage($category, $productName) {
     </div>
 
     <div class="view-products">
-        <a href="<?php echo isset($_SESSION['user_id']) ? 'marketplace.php' : 'registration.php?mode=login'; ?>">View All Products →</a>
+        <a href="#produce-section">Browse All Products on This Page →</a>
     </div>
 </section>
 
