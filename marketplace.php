@@ -1,4 +1,12 @@
 <?php
+$cookieLifetime = 60 * 60 * 24 * 30; // 30 days
+session_set_cookie_params([
+    'lifetime' => $cookieLifetime,
+    'path' => '/',
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 session_start();
 
 if (!isset($_SESSION["user_id"])) {
@@ -9,6 +17,26 @@ if (!isset($_SESSION["user_id"])) {
 $userName = $_SESSION["user_name"] ?? "User";
 $userRole = strtolower(trim($_SESSION["user_role"] ?? "buyer")); // buyer or farmer
 $isFarmer = ($userRole === "farmer" || $userRole === "seller");
+
+$products = [];
+$productMessage = "";
+require_once 'database.php';
+
+if (isset($conn)) {
+    $query = "SELECT p.id, p.product_name as name, p.description, p.price, p.stock as quantity, p.farmer_id, u.full_name as seller_name FROM products p JOIN users u ON p.farmer_id = u.id WHERE p.stock > 0 ORDER BY p.id DESC";
+    $result = mysqli_query($conn, $query);
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $products[] = $row;
+        }
+    } else {
+        $productMessage = "Unable to load marketplace products right now.";
+    }
+} else {
+    $productMessage = "Product database unavailable.";
+}
+
+$productCount = count($products);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,89 +56,11 @@ $isFarmer = ($userRole === "farmer" || $userRole === "seller");
 
     <div class="market-nav-right">
         <span class="welcome-text">Hi, <?php echo htmlspecialchars($userName); ?></span>
+        <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
         <a href="Mainpage.php" class="dashboard-btn">Home</a>
         <a href="logout.php" class="dashboard-btn">Logout</a>
     </div>
 </header>
-
-<!-- ROLE-BASED DASHBOARD SECTION -->
-<section class="role-dashboard">
-    <div class="role-dashboard-inner">
-
-        <?php if ($isFarmer): ?>
-            <div class="dashboard-header">
-                <h1>Farmer Dashboard</h1>
-                <p>Manage your products, orders, inventory, and sales in one place.</p>
-            </div>
-
-            <div class="dashboard-cards">
-                <div class="dashboard-card">
-                    <h3>Total Products</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Active Orders</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Low Stock Alerts</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Total Sales</h3>
-                    <p>₱0.00</p>
-                </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <a href="add_product.php" class="action-btn">Add Product</a>
-                <a href="products.php" class="action-btn">My Products</a>
-                <a href="orders.php" class="action-btn">View Orders</a>
-                <a href="inventory.php" class="action-btn">Inventory</a>
-                <a href="#marketplace-products" class="action-btn">Browse Marketplace</a>
-            </div>
-
-        <?php else: ?>
-            <div class="dashboard-header">
-                <h1>Buyer Dashboard</h1>
-                <p>Browse fresh produce, track your orders, and connect with local farmers.</p>
-            </div>
-
-            <div class="dashboard-cards">
-                <div class="dashboard-card">
-                    <h3>Total Orders</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Active Orders</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Completed Orders</h3>
-                    <p>0</p>
-                </div>
-
-                <div class="dashboard-card">
-                    <h3>Saved Items</h3>
-                    <p>0</p>
-                </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <a href="#marketplace-products" class="action-btn">Browse Products</a>
-                <a href="orders.php" class="action-btn">My Orders</a>
-                <a href="messages.php" class="action-btn">Messages</a>
-                <a href="profile.php" class="action-btn">My Profile</a>
-            </div>
-        <?php endif; ?>
-
-    </div>
-</section>
 
 <!-- MARKETPLACE HERO -->
 <section class="market-hero">
@@ -141,7 +91,7 @@ $isFarmer = ($userRole === "farmer" || $userRole === "seller");
 
                 <div class="filter-group results-box">
                     <label>Showing Results</label>
-                    <div class="result-number">0</div>
+                    <div class="result-number"><?php echo $productCount; ?></div>
                 </div>
             </div>
         </div>
@@ -152,21 +102,49 @@ $isFarmer = ($userRole === "farmer" || $userRole === "seller");
         </div>
     </div>
 
-    <div class="empty-products">
-        <div class="empty-card">
-            <h2>No products available yet</h2>
-            <p>
-                Farmers will post their fresh produce here soon.
-                Once sellers add products, they will appear in this marketplace.
-            </p>
-
-            <?php if ($isFarmer): ?>
-                <a href="add_product.php" class="back-market-btn">Add Your First Product</a>
-            <?php else: ?>
-                <a href="Mainpage.php" class="back-market-btn">Back to Home</a>
-            <?php endif; ?>
+    <?php if ($productCount > 0): ?>
+        <div class="product-grid">
+            <?php foreach ($products as $product): ?>
+                <article class="product-card">
+                    <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                    <p class="product-desc"><?php echo htmlspecialchars($product['description']); ?></p>
+                    <div class="price-row">
+                        <p class="price">₱<?php echo number_format($product['price'], 2); ?> <span>/kg</span></p>
+                        <p class="stock"><?php echo (int)$product['quantity']; ?> kg left</p>
+                    </div>
+                    <p class="seller-name">Farmer: <?php echo htmlspecialchars($product['seller_name'] ?? 'Local Farmer'); ?></p>
+                    <div class="product-actions">
+                        <span class="product-badge">Accessible to buyers and sellers</span>
+                        <?php if ($product['farmer_id'] !== $_SESSION['user_id']): ?>
+                            <a href="Message.php?user_id=<?php echo (int)$product['farmer_id']; ?>" class="product-contact">Message Seller</a>
+                        <?php else: ?>
+                            <span class="product-contact product-owner">Your Listing</span>
+                        <?php endif; ?>
+                    </div>
+                </article>
+            <?php endforeach; ?>
         </div>
-    </div>
+    <?php else: ?>
+        <div class="empty-products">
+            <div class="empty-card">
+                <h2>No products available yet</h2>
+                <p>
+                    Farmers will post their fresh produce here soon.
+                    Once sellers add products, they will appear in this marketplace.
+                </p>
+
+                <?php if ($productMessage): ?>
+                    <p class="error-message"><?php echo htmlspecialchars($productMessage); ?></p>
+                <?php endif; ?>
+
+                <?php if ($isFarmer): ?>
+                    <a href="products.php" class="back-market-btn">Add Your First Product</a>
+                <?php else: ?>
+                    <a href="Mainpage.php" class="back-market-btn">Back to Home</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 </section>
 
 </body>

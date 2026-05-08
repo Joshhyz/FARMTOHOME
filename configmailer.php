@@ -18,10 +18,8 @@ function sendVerificationCode($email, $code){
         $mail->SMTPAuth = true;
 
         // 🔴 CHANGE THIS
-        $mail->Username = 'farmtohomee11@gmail.com
-';
-        $mail->Password = 'knwu jnqr jgrx ztkk
-';
+        $mail->Username = 'farmtohomee11@gmail.com';
+        $mail->Password = 'knwu jnqr jgrx ztkk';
 
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;

@@ -1,4 +1,12 @@
 <?php
+$cookieLifetime = 60 * 60 * 24 * 30; // 30 days
+session_set_cookie_params([
+    'lifetime' => $cookieLifetime,
+    'path' => '/',
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 session_start();
 include "database.php";
 include "configmailer.php";
@@ -41,12 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["user_role"] = $user["role"];
 
             unset($_SESSION["verification_code"], $_SESSION["auth_type"], $_SESSION["auth_email"]);
-
-            if ($_SESSION["user_role"] == "farmer") {
-                header("Location: dashboard.php");
-            } else {
-                header("Location: marketplace.php");
-            }
+            header("Location: dashboard.php");
             exit();
         }
 
@@ -75,11 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["signup_role"]
             );
 
-            if ($_SESSION["user_role"] == "farmer") {
-                header("Location: dashboard.php");
-            } else {
-                header("Location: marketplace.php");
-            }
+            header("Location: dashboard.php");
             exit();
         }
 

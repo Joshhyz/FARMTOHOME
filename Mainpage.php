@@ -1,4 +1,12 @@
 <?php
+$cookieLifetime = 60 * 60 * 24 * 30; // 30 days
+session_set_cookie_params([
+    'lifetime' => $cookieLifetime,
+    'path' => '/',
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 session_start();
 ?>
 <!DOCTYPE html>
@@ -27,12 +35,8 @@ session_start();
                 Hi, <?php echo htmlspecialchars($_SESSION["user_name"]); ?>
             </span>
 
-            <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
-                <a href="dashboard.php">Dashboard</a>
-            <?php } else { ?>
-                <a href="marketplace.php">Marketplace</a>
-            <?php } ?>
-
+            <a href="dashboard.php">Dashboard</a>
+            <a href="marketplace.php">Marketplace</a>
             <a class="logout-btn" href="logout.php">Logout</a>
         <?php } else { ?>
             <a href="registration.php?mode=login">Login</a>
@@ -62,11 +66,7 @@ session_start();
             </a>
 
             <?php if (isset($_SESSION["user_id"])) { ?>
-                <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
-                    <a class="btn-outline" href="dashboard.php">Go to Farmer Dashboard</a>
-                <?php } else { ?>
-                    <a class="btn-outline" href="marketplace.php">Start Shopping</a>
-                <?php } ?>
+                <a class="btn-outline" href="dashboard.php">Go to Dashboard</a>
             <?php } else { ?>
                 <a class="btn-outline" href="registration.php?mode=signup">Sell as a Farmer</a>
             <?php } ?>
@@ -324,11 +324,7 @@ session_start();
 
         <div class="cta-buttons">
             <?php if (isset($_SESSION["user_id"])) { ?>
-                <?php if (isset($_SESSION["user_role"]) && $_SESSION["user_role"] == "farmer") { ?>
-                    <a href="dashboard.php" class="cta-btn-primary">Go to Dashboard</a>
-                <?php } else { ?>
-                    <a href="marketplace.php" class="cta-btn-primary">Explore Marketplace</a>
-                <?php } ?>
+                <a href="dashboard.php" class="cta-btn-primary">Go to Dashboard</a>
                 <a href="logout.php" class="cta-btn-outline">Logout</a>
             <?php } else { ?>
                 <a href="registration.php?mode=signup" class="cta-btn-primary">Create Free Account</a>
