@@ -8,6 +8,75 @@ session_set_cookie_params([
     'samesite' => 'Lax'
 ]);
 session_start();
+
+$products = [];
+$productMessage = '';
+
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "farmtohome_db";
+
+$conn = mysqli_connect($host, $username, $password, $database);
+if ($conn) {
+    $query = "SELECT p.id, p.product_name, p.category, p.price, p.stock, p.farmer_id, u.full_name AS seller_name
+              FROM products p
+              JOIN users u ON p.farmer_id = u.id
+              WHERE p.stock > 0
+              ORDER BY p.id DESC
+              LIMIT 3";
+
+    $result = mysqli_query($conn, $query);
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $products[] = $row;
+        }
+    } else {
+        $productMessage = 'Unable to load featured products at the moment.';
+    }
+    mysqli_close($conn);
+} else {
+    $productMessage = 'Unable to connect to product database.';
+}
+
+function getProductImage($category, $productName) {
+    $categoryKey = strtolower(trim($category));
+    $nameKey = strtolower(trim($productName));
+    $label = htmlspecialchars($productName ?: $category ?: 'Fresh Produce');
+
+    $productMap = [
+        'potato' => ['color' => 'A5D6A7'],
+        'strawberry' => ['color' => 'F48FB1'],
+        'tomato' => ['color' => 'EF9A9A'],
+        'lettuce' => ['color' => 'C5E1A5'],
+        'carrot' => ['color' => 'FFCC80'],
+        'berry' => ['color' => 'CE93D8'],
+        'eggplant' => ['color' => 'B39DDB'],
+    ];
+
+    $categoryMap = [
+        'vegetables' => ['color' => 'A5D6A7'],
+        'fruits' => ['color' => 'F48FB1'],
+        'mixed vegetables' => ['color' => 'FFE082'],
+        'herbs' => ['color' => 'AED581'],
+        'dairy' => ['color' => '90CAF9'],
+        'grains' => ['color' => 'FFE0B2'],
+    ];
+
+    foreach ($productMap as $key => $image) {
+        if (strpos($nameKey, $key) !== false) {
+            $color = $image['color'];
+            return ['path' => 'https://via.placeholder.com/420x280/'.$color.'/ffffff?text='.urlencode($label), 'alt' => $label];
+        }
+    }
+
+    if (isset($categoryMap[$categoryKey])) {
+        $color = $categoryMap[$categoryKey]['color'];
+        return ['path' => 'https://via.placeholder.com/420x280/'.$color.'/ffffff?text='.urlencode($label), 'alt' => $label];
+    }
+
+    return ['path' => 'https://via.placeholder.com/420x280/9E9E9E/ffffff?text='.urlencode($label), 'alt' => $label];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -99,66 +168,39 @@ session_start();
     </div>
 
     <div class="produce-container">
+        <?php if (count($products) > 0): ?>
+            <?php foreach ($products as $product): ?>
+                <?php $image = getProductImage($product['category'] ?? '', $product['product_name']); ?>
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="<?php echo htmlspecialchars($image['path']); ?>" alt="<?php echo htmlspecialchars($image['alt']); ?>">
+                        <span class="verified">✔ Verified</span>
+                    </div>
 
-        <!-- Product 1 -->
-        <div class="product-card">
-            <div class="product-image">
-                <img src="images/potatoes.jpg" alt="Fresh Potatoes">
-                <span class="verified">✔ Verified</span>
-            </div>
+                    <div class="product-info">
+                        <span class="category"><?php echo htmlspecialchars($product['category'] ?: 'Produce'); ?></span>
+                        <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
 
-            <div class="product-info">
-                <span class="category">Vegetables</span>
-                <h3>Fresh Potatoes</h3>
+                        <div class="price-row">
+                            <p class="price">$<?php echo number_format((float)$product['price'], 2); ?> <span>/kg</span></p>
+                            <p class="stock"><?php echo (int)$product['stock']; ?> kg left</p>
+                        </div>
 
-                <div class="price-row">
-                    <p class="price">$1.99 <span>/kg</span></p>
-                    <p class="stock">100 kg left</p>
+                        <p class="farmer">👨‍🌾 <?php echo htmlspecialchars($product['seller_name']); ?></p>
+                    </div>
                 </div>
-
-                <p class="farmer">👨‍🌾 Sarah Green</p>
-            </div>
-        </div>
-
-        <!-- Product 2 -->
-        <div class="product-card">
-            <div class="product-image">
-                <img src="images/strawberries.jpg" alt="Organic Strawberries">
-                <span class="verified">✔ Verified</span>
-            </div>
-
-            <div class="product-info">
-                <span class="category">Fruits</span>
-                <h3>Organic Strawberries</h3>
-
-                <div class="price-row">
-                    <p class="price">$5.99 <span>/kg</span></p>
-                    <p class="stock">20 kg left</p>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="product-card empty-card">
+                <div class="product-info">
+                    <h3>No fresh products available yet</h3>
+                    <p>New seller listings will appear here once they are posted.</p>
+                    <?php if ($productMessage): ?>
+                        <p><?php echo htmlspecialchars($productMessage); ?></p>
+                    <?php endif; ?>
                 </div>
-
-                <p class="farmer">👨‍🌾 Sarah Green</p>
             </div>
-        </div>
-
-        <!-- Product 3 -->
-        <div class="product-card">
-            <div class="product-image">
-                <img src="images/mixedvegetables.jpg" alt="Mixed Vegetables">
-            </div>
-
-            <div class="product-info">
-                <span class="category">Vegetables</span>
-                <h3>Mixed Vegetables</h3>
-
-                <div class="price-row">
-                    <p class="price">$4.5 <span>/kg</span></p>
-                    <p class="stock">40 kg left</p>
-                </div>
-
-                <p class="farmer">👨‍🌾 Mike Harvest</p>
-            </div>
-        </div>
-
+        <?php endif; ?>
     </div>
 
     <div class="view-products">
