@@ -19,17 +19,6 @@ if (!isset($_SESSION["verification_code"]) || !isset($_SESSION["auth_email"]) ||
     exit();
 }
 
-if (isset($_GET["resend"]) && $_GET["resend"] == "1") {
-    $new_code = rand(100000, 999999);
-    $_SESSION["verification_code"] = $new_code;
-
-    if (sendVerificationCode($_SESSION["auth_email"], $new_code)) {
-        $success = "A new verification code has been sent to your email.";
-    } else {
-        $error = "Failed to resend verification code.";
-    }
-}
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $entered_code = trim($_POST["verification_code"]);
     $real_code = $_SESSION["verification_code"];
@@ -48,7 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["user_email"] = $user["email"];
             $_SESSION["user_role"] = $user["role"];
 
-            unset($_SESSION["verification_code"], $_SESSION["auth_type"], $_SESSION["auth_email"]);
+            // ✅ IMPORTANT: Don't unset verification_code - keep OTP in database for future logins
+            unset($_SESSION["auth_type"], $_SESSION["auth_email"]);
             header("Location: dashboard.php");
             exit();
         }
@@ -58,9 +48,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $email = $_SESSION["auth_email"];
             $password = $_SESSION["signup_password"];
             $role = $_SESSION["signup_role"];
+            $otp = $_SESSION["verification_code"];
 
-            mysqli_query($conn, "INSERT INTO users (full_name, email, password, role) 
-                                 VALUES ('$name', '$email', '$password', '$role')");
+            mysqli_query($conn, "INSERT INTO users (full_name, email, password, role, login_otp) 
+                                 VALUES ('$name', '$email', '$password', '$role', '$otp')");
 
             $new_id = mysqli_insert_id($conn);
 
@@ -75,7 +66,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["auth_email"],
                 $_SESSION["signup_name"],
                 $_SESSION["signup_password"],
-                $_SESSION["signup_role"]
+                $_SESSION["signup_role"],
+                $_SESSION["signup_otp"]
             );
 
             header("Location: dashboard.php");
@@ -118,11 +110,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="text" name="verification_code" maxlength="6" placeholder="Enter 6-digit code" required>
             <button type="submit" class="main-btn">Verify Code</button>
         </form>
-
-        <p class="resend-text">
-            Didn't receive a code?
-            <a href="verifycode.php?resend=1">Resend it</a>
-        </p>
     </div>
 </div>
 

@@ -7,6 +7,29 @@ require __DIR__ . '/phpmailer/PHPMailer-master/PHPMailer-master/src/PHPMailer.ph
 require __DIR__ . '/phpmailer/PHPMailer-master/PHPMailer-master/src/SMTP.php';
 require __DIR__ . '/phpmailer/PHPMailer-master/PHPMailer-master/src/Exception.php';
 
+// Get existing OTP for email or return null if none exists
+function getExistingLoginOTP($email) {
+    global $conn;
+    $email = mysqli_real_escape_string($conn, $email);
+    $query = mysqli_query($conn, "SELECT login_otp FROM users WHERE email = '$email'");
+    
+    if ($query && mysqli_num_rows($query) > 0) {
+        $result = mysqli_fetch_assoc($query);
+        return $result['login_otp'] ?? null;
+    }
+    return null;
+}
+
+// Save OTP to database
+function saveLoginOTP($email, $code) {
+    global $conn;
+    $email = mysqli_real_escape_string($conn, $email);
+    $code = mysqli_real_escape_string($conn, $code);
+    
+    $query = mysqli_query($conn, "UPDATE users SET login_otp = '$code' WHERE email = '$email'");
+    return $query;
+}
+
 function sendVerificationCode($email, $code){
 
     $mail = new PHPMailer(true);

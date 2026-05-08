@@ -25,19 +25,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (mysqli_num_rows($checkUser) > 0) {
 
-            $code = rand(100000, 999999);
+            // Check if OTP already exists for this email
+            $existingOTP = getExistingLoginOTP($email);
+            
+            if ($existingOTP) {
+                // Reuse existing OTP - don't send email
+                $code = $existingOTP;
+                $otpMessage = "Using your existing verification code. Check your email.";
+            } else {
+                // Generate new OTP and send email
+                $code = rand(100000, 999999);
+                saveLoginOTP($email, $code);
+                
+                if(!sendVerificationCode($email, $code)) {
+                    $error = "Failed to send verification email.";
+                    exit();
+                }
+                $otpMessage = "Verification code sent to your email.";
+            }
 
             $_SESSION["verification_code"] = $code;
             $_SESSION["auth_email"] = $email;
             $_SESSION["auth_type"] = "login";
 
-            // ✅ SEND EMAIL HERE
-            if(sendVerificationCode($email, $code)){
-                header("Location: verifycode.php");
-                exit();
-            } else {
-                $error = "Failed to send verification email.";
-            }
+            header("Location: verifycode.php");
+            exit();
 
         } else {
             $error = "No account found with that email. Please sign up first.";
@@ -68,6 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["auth_email"] = $email;
             $_SESSION["signup_password"] = password_hash($password, PASSWORD_DEFAULT);
             $_SESSION["signup_role"] = $role;
+            $_SESSION["signup_otp"] = $code;
 
             // ✅ SEND EMAIL HERE
             if(sendVerificationCode($email, $code)){
