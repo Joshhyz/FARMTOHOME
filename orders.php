@@ -28,12 +28,13 @@ if ($currentUserRole !== 'farmer' && $currentUserRole !== 'seller') {
 $orders = [];
 $orderMessage = '';
 
-$orderQuery = "SELECT o.id AS order_id, o.quantity, o.status, o.order_date, p.product_name, p.category, p.price, u.full_name AS buyer_name
+$orderQuery = "SELECT o.id AS order_id, oi.quantity, o.order_status AS status, o.created_at AS order_date, p.product_name, p.category, oi.price, u.full_name AS buyer_name
                FROM orders o
-               JOIN products p ON o.product_id = p.id
-               JOIN users u ON o.buyer_id = u.id
+               JOIN order_items oi ON o.id = oi.order_id
+               JOIN products p ON oi.product_id = p.id
+               JOIN users u ON o.user_id = u.id
                WHERE p.farmer_id = $currentUserId
-               ORDER BY o.order_date DESC";
+               ORDER BY o.created_at DESC";
 
 $orderResult = @mysqli_query($conn, $orderQuery);
 if ($orderResult) {

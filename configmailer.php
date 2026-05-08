@@ -41,6 +41,7 @@ function sendVerificationCode($email, $code){
         return true;
 
     }catch(Exception $e){
+        error_log("PHPMailer Error: " . $e->getMessage());
         return false;
     }
 }
