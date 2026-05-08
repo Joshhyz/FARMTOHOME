@@ -137,19 +137,46 @@ if (!$isAdmin && isset($_GET['delete_id'])) {
     }
 }
 
-// Get products
-$products = [];
+// Get products grouped by farmer
+$farmerProducts = [];
 if ($isAdmin) {
     $searchFilter = '';
     if ($adminSearch !== '') {
         $safeSearch = mysqli_real_escape_string($conn, $adminSearch);
-        $searchFilter = "WHERE p.product_name LIKE '%$safeSearch%' OR p.category LIKE '%$safeSearch%' OR u.full_name LIKE '%$safeSearch%'";
+        $searchFilter = "WHERE (p.product_name LIKE '%$safeSearch%' OR p.category LIKE '%$safeSearch%' OR u.full_name LIKE '%$safeSearch%')";
     }
 
-    $productResult = mysqli_query($conn, "SELECT p.id, p.product_name, p.category, p.price, p.stock, p.description, u.full_name AS farmer_name FROM products p LEFT JOIN users u ON p.farmer_id = u.id $searchFilter ORDER BY p.id DESC");
-    if ($productResult) {
-        while ($row = mysqli_fetch_assoc($productResult)) {
-            $products[] = $row;
+    // First get all farmers who have products
+    $farmerQuery = "SELECT DISTINCT u.id, u.full_name, u.email, COUNT(p.id) as product_count 
+                   FROM users u 
+                   LEFT JOIN products p ON u.id = p.farmer_id 
+                   WHERE u.role = 'farmer' AND p.id IS NOT NULL $searchFilter
+                   GROUP BY u.id, u.full_name, u.email 
+                   ORDER BY u.full_name ASC";
+    
+    $farmerResult = mysqli_query($conn, $farmerQuery);
+    if ($farmerResult) {
+        while ($farmer = mysqli_fetch_assoc($farmerResult)) {
+            $farmerId = $farmer['id'];
+            
+            // Get products for this farmer
+            $productQuery = "SELECT p.id, p.product_name, p.category, p.price, p.stock, p.description 
+                           FROM products p 
+                           WHERE p.farmer_id = $farmerId 
+                           ORDER BY p.product_name ASC";
+            
+            $productResult = mysqli_query($conn, $productQuery);
+            $products = [];
+            if ($productResult) {
+                while ($product = mysqli_fetch_assoc($productResult)) {
+                    $products[] = $product;
+                }
+            }
+            
+            $farmerProducts[] = [
+                'farmer' => $farmer,
+                'products' => $products
+            ];
         }
     }
 } else {
@@ -185,43 +212,50 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
         .search-bar input { flex:1; padding:12px 14px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; }
         .search-bar button { padding:12px 18px; border:none; border-radius:12px; background:#16a34a; color:#fff; cursor:pointer; font-weight:600; }
         
-        .admin-products-grid { display:flex; flex-direction:column; gap:14px; }
-        .admin-product-row { display:grid; grid-template-columns:80px 1fr 180px 100px 100px 80px; gap:20px; align-items:center; background:white; padding:16px 20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.04); border:1px solid #f3f4f6; }
+        .farmers-products-container { display:flex; flex-direction:column; gap:30px; }
         
-        .product-image-cell img { width:80px; height:80px; border-radius:8px; object-fit:cover; }
+        .farmer-section { background:white; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.08); overflow:hidden; }
         
-        .product-details-cell h3 { font-size:16px; font-weight:600; color:#1f2937; margin:0 0 6px 0; }
-        .product-category { font-size:13px; color:#6b7280; margin:0; }
+        .farmer-header { background:linear-gradient(135deg, #16a34a, #22c55e); color:white; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
         
-        .seller-info-cell { position:relative; }
-        .farmer-name { font-size:14px; color:#374151; margin:0; font-weight:500; }
-        .verified-badge { color:#16a34a; font-size:16px; margin-left:6px; }
+        .farmer-info { display:flex; align-items:center; gap:16px; }
+        .farmer-avatar img { width:50px; height:50px; border-radius:50%; border:3px solid rgba(255,255,255,0.3); }
+        .farmer-details h3 { margin:0 0 4px 0; font-size:18px; font-weight:600; }
+        .farmer-details p { margin:0; font-size:14px; opacity:0.9; }
+        .product-count { background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:12px; font-size:12px; font-weight:500; margin-top:6px; display:inline-block; }
         
-        .price-cell { text-align:center; }
-        .price { font-size:18px; font-weight:700; color:#1f2937; }
-        .unit { font-size:12px; color:#6b7280; margin-left:4px; }
+        .verified-badge { background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:20px; font-size:12px; font-weight:500; }
         
-        .stock-cell { text-align:center; }
-        .stock-value { font-size:18px; font-weight:700; color:#1f2937; display:block; }
-        .stock-unit { font-size:12px; color:#6b7280; }
+        .farmer-products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; padding:24px; }
         
-        .actions-cell { display:flex; gap:8px; justify-content:center; }
-        .action-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; text-decoration:none; font-size:16px; cursor:pointer; border:none; transition:0.3s; }
+        .product-card-admin { background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; transition:0.3s; }
+        .product-card-admin:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(0,0,0,0.1); }
+        
+        .product-image img { width:100%; height:120px; object-fit:cover; border-radius:8px; }
+        
+        .product-info h4 { margin:0 0 6px 0; font-size:16px; font-weight:600; color:#1f2937; }
+        .category { margin:0; font-size:13px; color:#6b7280; text-transform:uppercase; font-weight:500; }
+        
+        .product-meta { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+        .price { font-size:16px; font-weight:700; color:#16a34a; }
+        .stock { font-size:13px; color:#6b7280; }
+        
+        .product-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+        .action-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; text-decoration:none; font-size:14px; cursor:pointer; border:none; transition:0.3s; }
         .view-btn { background:#f0f9ff; color:#0284c7; }
         .view-btn:hover { background:#bfdbfe; }
+        .edit-btn { background:#fef3c7; color:#d97706; }
+        .edit-btn:hover { background:#fde68a; }
         .delete-btn { background:#fee2e2; color:#dc2626; }
         .delete-btn:hover { background:#fecaca; }
         
-        .no-products-message { grid-column:1/-1; padding:40px; text-align:center; color:#6b7280; }
+        .no-products-message { padding:60px; text-align:center; color:#6b7280; font-size:16px; }
         
-        @media (max-width:1200px) {
-            .admin-product-row { grid-template-columns:70px 1fr 130px 80px 80px 70px; gap:12px; }
-            .product-image-cell img { width:70px; height:70px; }
-        }
         @media (max-width:768px) {
-            .admin-product-row { grid-template-columns:60px 1fr 60px; gap:12px; }
-            .seller-info-cell, .price-cell, .stock-cell { display:none; }
-            .actions-cell { grid-column:3; }
+            .farmer-header { flex-direction:column; gap:16px; text-align:center; }
+            .farmer-products-grid { grid-template-columns:1fr; padding:16px; }
+            .product-card-admin { flex-direction:row; }
+            .product-image img { width:80px; height:80px; flex-shrink:0; }
         }
     </style>
 </head>
@@ -233,7 +267,7 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
         FarmToHome
     </div>
     <div class="dashboard-topbar-right">
-        <span class="dashboard-role-label">Farmer Role</span>
+        <span class="dashboard-role-label"><?php echo $isAdmin ? 'Admin Role' : 'Farmer Role'; ?></span>
         <div class="dashboard-user">Hi, <?php echo htmlspecialchars($currentUserName); ?></div>
         <a href="logout.php" class="dashboard-logout">Logout</a>
     </div>
@@ -241,25 +275,44 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
 
 <div class="dashboard-layout">
     <aside class="dashboard-sidebar">
-        <div class="sidebar-title">Farmer Menu</div>
-        <div class="sidebar-description">Manage products, orders, inventory, and customer messages.</div>
-        <div class="sidebar-menu">
-            <a class="sidebar-item" href="dashboard.php">
-                <span>Dashboard</span>
-            </a>
-            <a class="sidebar-item active" href="products.php">
-                <span>Products</span>
-            </a>
-            <a class="sidebar-item" href="inventory.php">
-                <span>Inventory</span>
-            </a>
-            <a class="sidebar-item" href="orders.php">
-                <span>Orders</span>
-            </a>
-            <a class="sidebar-item" href="Message.php">
-                <span>Messages</span>
-            </a>
-        </div>
+        <?php if ($isAdmin): ?>
+            <div class="sidebar-title">Admin Menu</div>
+            <div class="sidebar-description">Manage users, products, reports, and system overview.</div>
+            <div class="sidebar-menu">
+                <a class="sidebar-item" href="admindashboard.php">
+                    <span>Dashboard</span>
+                </a>
+                <a class="sidebar-item active" href="products.php">
+                    <span>Products</span>
+                </a>
+                <a class="sidebar-item" href="users.php">
+                    <span>Users</span>
+                </a>
+                <a class="sidebar-item" href="reports.php">
+                    <span>Reports</span>
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="sidebar-title">Farmer Menu</div>
+            <div class="sidebar-description">Manage products, orders, inventory, and customer messages.</div>
+            <div class="sidebar-menu">
+                <a class="sidebar-item" href="dashboard.php">
+                    <span>Dashboard</span>
+                </a>
+                <a class="sidebar-item active" href="products.php">
+                    <span>Products</span>
+                </a>
+                <a class="sidebar-item" href="inventory.php">
+                    <span>Inventory</span>
+                </a>
+                <a class="sidebar-item" href="orders.php">
+                    <span>Orders</span>
+                </a>
+                <a class="sidebar-item" href="Message.php">
+                    <span>Messages</span>
+                </a>
+            </div>
+        <?php endif; ?>
     </aside>
 
     <main class="dashboard-main">
@@ -283,38 +336,53 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
                 <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
-            <div class="admin-products-grid">
-                <?php if (count($products) > 0): ?>
-                    <?php foreach ($products as $product): ?>
-                        <div class="admin-product-row">
-                            <div class="product-image-cell">
-                                <img src="https://via.placeholder.com/80x80?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+            <div class="farmers-products-container">
+                <?php if (count($farmerProducts) > 0): ?>
+                    <?php foreach ($farmerProducts as $farmerData): ?>
+                        <div class="farmer-section">
+                            <div class="farmer-header">
+                                <div class="farmer-info">
+                                    <div class="farmer-avatar">
+                                        <img src="https://via.placeholder.com/50x50?text=<?php echo urlencode(substr($farmerData['farmer']['full_name'], 0, 1)); ?>" alt="<?php echo htmlspecialchars($farmerData['farmer']['full_name']); ?>">
+                                    </div>
+                                    <div class="farmer-details">
+                                        <h3><?php echo htmlspecialchars($farmerData['farmer']['full_name']); ?></h3>
+                                        <p><?php echo htmlspecialchars($farmerData['farmer']['email']); ?></p>
+                                        <span class="product-count"><?php echo count($farmerData['products']); ?> products</span>
+                                    </div>
+                                </div>
+                                <div class="farmer-actions">
+                                    <span class="verified-badge">✓ Verified Farmer</span>
+                                </div>
                             </div>
-                            <div class="product-details-cell">
-                                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
-                                <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
-                            </div>
-                            <div class="seller-info-cell">
-                                <p class="farmer-name"><?php echo htmlspecialchars($product['farmer_name'] ?: 'Unknown Seller'); ?></p>
-                                <span class="verified-badge">✓</span>
-                            </div>
-                            <div class="price-cell">
-                                <span class="price">₱<?php echo number_format($product['price'], 2); ?></span>
-                                <span class="unit">/kg</span>
-                            </div>
-                            <div class="stock-cell">
-                                <span class="stock-value"><?php echo (int) $product['stock']; ?></span>
-                                <span class="stock-unit">kg</span>
-                            </div>
-                            <div class="actions-cell">
-                                <a href="#" class="action-btn view-btn" title="View">👁</a>
-                                <a href="#" class="action-btn delete-btn" title="Delete">✕</a>
+                            
+                            <div class="farmer-products-grid">
+                                <?php foreach ($farmerData['products'] as $product): ?>
+                                    <div class="product-card-admin">
+                                        <div class="product-image">
+                                            <img src="https://via.placeholder.com/120x120?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                                        </div>
+                                        <div class="product-info">
+                                            <h4><?php echo htmlspecialchars($product['product_name']); ?></h4>
+                                            <p class="category"><?php echo htmlspecialchars($product['category']); ?></p>
+                                            <div class="product-meta">
+                                                <span class="price">₱<?php echo number_format($product['price'], 2); ?>/kg</span>
+                                                <span class="stock">Stock: <?php echo (int) $product['stock']; ?> kg</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-actions">
+                                            <a href="#" class="action-btn view-btn" title="View Details">👁</a>
+                                            <a href="#" class="action-btn edit-btn" title="Edit">✎</a>
+                                            <a href="#" class="action-btn delete-btn" title="Delete">🗑</a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="no-products-message">
-                        <p>No products found.</p>
+                        <p>No farmers with products found.</p>
                     </div>
                 <?php endif; ?>
             </div>
