@@ -1,94 +1,74 @@
 <?php
 require_once 'database.php';
 
-$totalUsers = 0;
-$totalFarmers = 0;
-$totalBuyers = 0;
-$totalProducts = 0;
-$totalOrders = 0;
-$activeOrders = 0;
-$platformHealth = 'Unknown';
+function dbCount($query) {
+    global $conn;
+    $result = mysqli_query($conn, $query);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_array($result);
+        return (int) $row[0];
+    }
+    return 0;
+}
+
+$totalUsers = dbCount("SELECT COUNT(*) FROM users");
+$totalFarmers = dbCount("SELECT COUNT(*) FROM users WHERE role = 'farmer'");
+$totalBuyers = dbCount("SELECT COUNT(*) FROM users WHERE role = 'buyer'");
+$totalProducts = dbCount("SELECT COUNT(*) FROM products");
+$totalOrders = dbCount("SELECT COUNT(*) FROM orders");
+$activeOrders = dbCount("SELECT COUNT(*) FROM orders WHERE order_status NOT IN ('completed', 'cancelled') OR order_status IS NULL");
+
+if ($totalUsers === 0 || $totalProducts === 0) {
+    $platformHealth = 'Starting';
+    $platformClass = 'orange';
+} elseif ($activeOrders > 0) {
+    $platformHealth = 'Good';
+    $platformClass = 'green';
+} elseif ($totalOrders > 0) {
+    $platformHealth = 'Fair';
+    $platformClass = 'orange';
+} else {
+    $platformHealth = 'Idle';
+    $platformClass = 'orange';
+}
+
 $recentActivities = [];
 
-if ($conn) {
-    $platformHealth = mysqli_ping($conn) ? 'Good' : 'Issue';
-
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM users");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $totalUsers = (int) $row['cnt'];
+$userResult = mysqli_query($conn, "SELECT full_name, role FROM users ORDER BY id DESC LIMIT 2");
+if ($userResult) {
+    while ($user = mysqli_fetch_assoc($userResult)) {
+        $roleLabel = strtolower(trim($user['role'])) === 'farmer' ? 'New farmer registered' : 'New buyer registered';
+        $recentActivities[] = [
+            'title' => $roleLabel,
+            'details' => $user['full_name']
+        ];
     }
+}
 
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM users WHERE role IN ('farmer', 'seller')");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $totalFarmers = (int) $row['cnt'];
-    }
+$productResult = mysqli_query($conn, "SELECT p.product_name, u.full_name AS seller_name FROM products p LEFT JOIN users u ON p.farmer_id = u.id ORDER BY p.id DESC LIMIT 1");
+if ($productResult && mysqli_num_rows($productResult) > 0) {
+    $productRow = mysqli_fetch_assoc($productResult);
+    $recentActivities[] = [
+        'title' => 'New product listed',
+        'details' => $productRow['product_name'] . ' added by ' . ($productRow['seller_name'] ?? 'a seller')
+    ];
+}
 
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM users WHERE role = 'buyer'");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $totalBuyers = (int) $row['cnt'];
-    }
+$orderResult = mysqli_query($conn, "SELECT o.order_status, p.product_name, u.full_name AS buyer_name FROM orders o JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id JOIN users u ON o.user_id = u.id WHERE LOWER(o.order_status) IN ('completed', 'confirmed') ORDER BY o.created_at DESC LIMIT 1");
+if ($orderResult && mysqli_num_rows($orderResult) > 0) {
+    $orderRow = mysqli_fetch_assoc($orderResult);
+    $orderTitle = strtolower($orderRow['order_status']) === 'completed' ? 'Order completed' : ucfirst($orderRow['order_status']) . ' order';
+    $recentActivities[] = [
+        'title' => $orderTitle,
+        'details' => $orderRow['buyer_name'] . ' received ' . $orderRow['product_name']
+    ];
+}
 
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM products");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $totalProducts = (int) $row['cnt'];
-    }
-
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM orders");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $totalOrders = (int) $row['cnt'];
-    }
-
-    $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM orders WHERE order_status NOT IN ('Completed', 'Cancelled')");
-    if ($result && $row = mysqli_fetch_assoc($result)) {
-        $activeOrders = (int) $row['cnt'];
-    }
-
-    $activityUsers = [];
-    $result = mysqli_query($conn, "SELECT id, full_name, role FROM users ORDER BY id DESC LIMIT 3");
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $role = strtolower($row['role']);
-            $activityUsers[] = [
-                'id' => (int)$row['id'],
-                'title' => $role === 'farmer' ? '🌱 New farmer registered' : '🛍️ New buyer registered',
-                'subtitle' => $row['full_name'] . ' joined the platform',
-                'date' => (int)$row['id'],
-            ];
-        }
-    }
-
-    $activityProducts = [];
-    $result = mysqli_query($conn, "SELECT p.id, p.product_name, u.full_name FROM products p JOIN users u ON p.farmer_id = u.id ORDER BY p.id DESC LIMIT 3");
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $activityProducts[] = [
-                'id' => (int)$row['id'],
-                'title' => '📦 New product listed',
-                'subtitle' => $row['product_name'] . ' added by ' . $row['full_name'],
-                'date' => (int)$row['id'],
-            ];
-        }
-    }
-
-    $activityOrders = [];
-    $result = mysqli_query($conn, "SELECT o.id, o.order_status, u.full_name FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.id DESC LIMIT 3");
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $status = ucfirst(strtolower($row['order_status']));
-            $activityOrders[] = [
-                'id' => (int)$row['id'],
-                'title' => '✅ Order ' . $status,
-                'subtitle' => $row['full_name'] . ' placed an order',
-                'date' => (int)$row['id'],
-            ];
-        }
-    }
-
-    $recentActivities = array_merge($activityProducts, $activityUsers, $activityOrders);
-    usort($recentActivities, function ($a, $b) {
-        return $b['date'] <=> $a['date'];
-    });
-    $recentActivities = array_slice($recentActivities, 0, 5);
+if (count($recentActivities) === 0) {
+    $recentActivities[] = [
+        'title' => 'No activity yet',
+        'details' => 'New buyers, sellers, products, and orders will appear here once they happen.'
+    ];
 }
 ?>
 
@@ -166,6 +146,13 @@ if ($conn) {
             </div>
 
             <div class="card">
+                <h3>🚚 Active Orders</h3>
+                <div class="number">
+                    <?php echo $activeOrders; ?>
+                </div>
+            </div>
+
+            <div class="card">
                 <h3>📑 Total Orders</h3>
                 <div class="number">
                     <?php echo $totalOrders; ?>
@@ -173,15 +160,8 @@ if ($conn) {
             </div>
 
             <div class="card">
-                <h3>🚦 Active Orders</h3>
-                <div class="number">
-                    <?php echo $activeOrders; ?>
-                </div>
-            </div>
-
-            <div class="card">
                 <h3>✅ Platform Health</h3>
-                <div class="number green">
+                <div class="number <?php echo $platformClass; ?>">
                     <?php echo htmlspecialchars($platformHealth); ?>
                 </div>
             </div>
@@ -193,19 +173,12 @@ if ($conn) {
 
             <h2>Recent Activity</h2>
 
-            <?php if (!empty($recentActivities)): ?>
-                <?php foreach ($recentActivities as $activity): ?>
-                    <div class="activity-item">
-                        <?php echo htmlspecialchars($activity['title']); ?>
-                        <p><?php echo htmlspecialchars($activity['subtitle']); ?></p>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
+            <?php foreach ($recentActivities as $activity): ?>
                 <div class="activity-item">
-                    No recent activity available yet.
-                    <p>Once farmers, buyers, and orders are created, activity will appear here.</p>
+                    <?php echo htmlspecialchars($activity['title']); ?>
+                    <p><?php echo htmlspecialchars($activity['details']); ?></p>
                 </div>
-            <?php endif; ?>
+            <?php endforeach; ?>
 
         </div>
 
