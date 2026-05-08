@@ -185,6 +185,50 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
     <title>My Products - FarmToHome</title>
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="products.css">
+    <style>
+        .search-bar { display:flex; gap:10px; margin-bottom:20px; }
+        .search-bar input { flex:1; padding:12px 14px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; }
+        .search-bar button { padding:12px 18px; border:none; border-radius:12px; background:#16a34a; color:#fff; cursor:pointer; font-weight:600; }
+        
+        .admin-products-grid { display:flex; flex-direction:column; gap:14px; }
+        .admin-product-row { display:grid; grid-template-columns:80px 1fr 180px 100px 100px 80px; gap:20px; align-items:center; background:white; padding:16px 20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.04); border:1px solid #f3f4f6; }
+        
+        .product-image-cell img { width:80px; height:80px; border-radius:8px; object-fit:cover; }
+        
+        .product-details-cell h3 { font-size:16px; font-weight:600; color:#1f2937; margin:0 0 6px 0; }
+        .product-category { font-size:13px; color:#6b7280; margin:0; }
+        
+        .seller-info-cell { position:relative; }
+        .farmer-name { font-size:14px; color:#374151; margin:0; font-weight:500; }
+        .verified-badge { color:#16a34a; font-size:16px; margin-left:6px; }
+        
+        .price-cell { text-align:center; }
+        .price { font-size:18px; font-weight:700; color:#1f2937; }
+        .unit { font-size:12px; color:#6b7280; margin-left:4px; }
+        
+        .stock-cell { text-align:center; }
+        .stock-value { font-size:18px; font-weight:700; color:#1f2937; display:block; }
+        .stock-unit { font-size:12px; color:#6b7280; }
+        
+        .actions-cell { display:flex; gap:8px; justify-content:center; }
+        .action-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; text-decoration:none; font-size:16px; cursor:pointer; border:none; transition:0.3s; }
+        .view-btn { background:#f0f9ff; color:#0284c7; }
+        .view-btn:hover { background:#bfdbfe; }
+        .delete-btn { background:#fee2e2; color:#dc2626; }
+        .delete-btn:hover { background:#fecaca; }
+        
+        .no-products-message { grid-column:1/-1; padding:40px; text-align:center; color:#6b7280; }
+        
+        @media (max-width:1200px) {
+            .admin-product-row { grid-template-columns:70px 1fr 130px 80px 80px 70px; gap:12px; }
+            .product-image-cell img { width:70px; height:70px; }
+        }
+        @media (max-width:768px) {
+            .admin-product-row { grid-template-columns:60px 1fr 60px; gap:12px; }
+            .seller-info-cell, .price-cell, .stock-cell { display:none; }
+            .actions-cell { grid-column:3; }
+        }
+    </style>
 </head>
 <body class="dashboard-page">
 
@@ -244,35 +288,40 @@ if (!$isAdmin && isset($_GET['edit_id'])) {
                 <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Farmer</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (count($products) > 0): ?>
-                            <?php foreach ($products as $product): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($product['product_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($product['farmer_name'] ?: 'Unknown'); ?></td>
-                                    <td><?php echo htmlspecialchars($product['category']); ?></td>
-                                    <td>₱<?php echo number_format($product['price'], 2); ?></td>
-                                    <td><?php echo (int) $product['stock']; ?> kg</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="5">No products found.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            <div class="admin-products-grid">
+                <?php if (count($products) > 0): ?>
+                    <?php foreach ($products as $product): ?>
+                        <div class="admin-product-row">
+                            <div class="product-image-cell">
+                                <img src="https://via.placeholder.com/80x80?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                            </div>
+                            <div class="product-details-cell">
+                                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                                <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
+                            </div>
+                            <div class="seller-info-cell">
+                                <p class="farmer-name"><?php echo htmlspecialchars($product['farmer_name'] ?: 'Unknown Seller'); ?></p>
+                                <span class="verified-badge">✓</span>
+                            </div>
+                            <div class="price-cell">
+                                <span class="price">₱<?php echo number_format($product['price'], 2); ?></span>
+                                <span class="unit">/kg</span>
+                            </div>
+                            <div class="stock-cell">
+                                <span class="stock-value"><?php echo (int) $product['stock']; ?></span>
+                                <span class="stock-unit">kg</span>
+                            </div>
+                            <div class="actions-cell">
+                                <a href="#" class="action-btn view-btn" title="View">👁</a>
+                                <a href="#" class="action-btn delete-btn" title="Delete">✕</a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="no-products-message">
+                        <p>No products found.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <section class="products-header">
