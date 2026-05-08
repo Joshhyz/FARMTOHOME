@@ -20,12 +20,7 @@ $currentUserId = (int) $_SESSION['user_id'];
 $currentUserName = $_SESSION['user_name'] ?? 'User';
 $currentUserRole = strtolower(trim($_SESSION['user_role'] ?? 'buyer'));
 
-$isAdmin = $currentUserRole === 'admin';
-if (!$isAdmin && $currentUserRole !== 'farmer' && $currentUserRole !== 'seller') {
-    header('Location: dashboard.php');
-    exit();
-}
-
+$isAdmin = $currentUserRole !== 'farmer' && $currentUserRole !== 'seller';
 $adminSearch = trim($_GET['search'] ?? '');
 $message = '';
 $error = '';

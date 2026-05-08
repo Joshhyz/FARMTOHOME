@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$currentUserRole = strtolower(trim($_SESSION['user_role'] ?? 'buyer'));
 $search = trim($_GET['search'] ?? '');
 $searchSql = '';
 if ($search !== '') {
