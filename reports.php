@@ -83,7 +83,7 @@ if ($result) {
         <div class="menu">
             <a href="admindashboard.php">🏠 Dashboard</a>
             <a href="users.php">👥 Users</a>
-            <a href="products.php">📦 Products</a>
+            <a href="admin_products.php">📦 Products</a>
             <a href="reports.php" class="active">📊 Reports</a>
         </div>
     </div>

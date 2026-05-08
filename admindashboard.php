@@ -96,7 +96,7 @@ if (count($recentActivities) === 0) {
         <div class="menu">
             <a href="index.php" class="active">🏠 Dashboard</a>
             <a href="users.php">👥 Users</a>
-            <a href="products.php">📦 Products</a>
+            <a href="admin_products.php">📦 Products</a>
             <a href="reports.php">📊 Reports</a>
         </div>
 

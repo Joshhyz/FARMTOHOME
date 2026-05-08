@@ -71,7 +71,7 @@ $totalAdmins = dbCount("SELECT COUNT(*) FROM users WHERE LOWER(role) = 'admin'")
         <div class="menu">
             <a href="admindashboard.php">🏠 Dashboard</a>
             <a href="users.php" class="active">👥 Users</a>
-            <a href="products.php">📦 Products</a>
+            <a href="admin_products.php">📦 Products</a>
             <a href="reports.php">📊 Reports</a>
         </div>
     </div>
