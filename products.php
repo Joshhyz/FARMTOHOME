@@ -20,16 +20,13 @@ $currentUserId = (int) $_SESSION['user_id'];
 $currentUserName = $_SESSION['user_name'] ?? 'User';
 $currentUserRole = strtolower(trim($_SESSION['user_role'] ?? 'buyer'));
 
-if ($currentUserRole !== 'farmer' && $currentUserRole !== 'seller') {
-    header('Location: dashboard.php');
-    exit();
-}
-
+$isAdmin = $currentUserRole !== 'farmer' && $currentUserRole !== 'seller';
+$adminSearch = trim($_GET['search'] ?? '');
 $message = '';
 $error = '';
 
 // Handle add/edit product
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if (!$isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $productName = trim($_POST['product_name'] ?? '');
     $category = trim($_POST['category'] ?? '');
@@ -123,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Handle delete
-if (isset($_GET['delete_id'])) {
+if (!$isAdmin && isset($_GET['delete_id'])) {
     $deleteId = (int) $_GET['delete_id'];
     $checkOwner = mysqli_query($conn, "SELECT farmer_id FROM products WHERE id = $deleteId");
     if ($checkOwner && mysqli_num_rows($checkOwner) > 0) {
@@ -140,18 +137,33 @@ if (isset($_GET['delete_id'])) {
     }
 }
 
-// Get seller's products
+// Get products
 $products = [];
-$productResult = mysqli_query($conn, "SELECT id, product_name, category, price, stock, description FROM products WHERE farmer_id = $currentUserId ORDER BY id DESC");
-if ($productResult) {
-    while ($row = mysqli_fetch_assoc($productResult)) {
-        $products[] = $row;
+if ($isAdmin) {
+    $searchFilter = '';
+    if ($adminSearch !== '') {
+        $safeSearch = mysqli_real_escape_string($conn, $adminSearch);
+        $searchFilter = "WHERE p.product_name LIKE '%$safeSearch%' OR p.category LIKE '%$safeSearch%' OR u.full_name LIKE '%$safeSearch%'";
+    }
+
+    $productResult = mysqli_query($conn, "SELECT p.id, p.product_name, p.category, p.price, p.stock, p.description, u.full_name AS farmer_name FROM products p LEFT JOIN users u ON p.farmer_id = u.id $searchFilter ORDER BY p.id DESC");
+    if ($productResult) {
+        while ($row = mysqli_fetch_assoc($productResult)) {
+            $products[] = $row;
+        }
+    }
+} else {
+    $productResult = mysqli_query($conn, "SELECT id, product_name, category, price, stock, description FROM products WHERE farmer_id = $currentUserId ORDER BY id DESC");
+    if ($productResult) {
+        while ($row = mysqli_fetch_assoc($productResult)) {
+            $products[] = $row;
+        }
     }
 }
 
 // Get product for editing
 $editProduct = null;
-if (isset($_GET['edit_id'])) {
+if (!$isAdmin && isset($_GET['edit_id'])) {
     $editId = (int) $_GET['edit_id'];
     $editResult = mysqli_query($conn, "SELECT * FROM products WHERE id = $editId AND farmer_id = $currentUserId");
     if ($editResult && mysqli_num_rows($editResult) > 0) {
@@ -168,6 +180,50 @@ if (isset($_GET['edit_id'])) {
     <title>My Products - FarmToHome</title>
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="products.css">
+    <style>
+        .search-bar { display:flex; gap:10px; margin-bottom:20px; }
+        .search-bar input { flex:1; padding:12px 14px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; }
+        .search-bar button { padding:12px 18px; border:none; border-radius:12px; background:#16a34a; color:#fff; cursor:pointer; font-weight:600; }
+        
+        .admin-products-grid { display:flex; flex-direction:column; gap:14px; }
+        .admin-product-row { display:grid; grid-template-columns:80px 1fr 180px 100px 100px 80px; gap:20px; align-items:center; background:white; padding:16px 20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.04); border:1px solid #f3f4f6; }
+        
+        .product-image-cell img { width:80px; height:80px; border-radius:8px; object-fit:cover; }
+        
+        .product-details-cell h3 { font-size:16px; font-weight:600; color:#1f2937; margin:0 0 6px 0; }
+        .product-category { font-size:13px; color:#6b7280; margin:0; }
+        
+        .seller-info-cell { position:relative; }
+        .farmer-name { font-size:14px; color:#374151; margin:0; font-weight:500; }
+        .verified-badge { color:#16a34a; font-size:16px; margin-left:6px; }
+        
+        .price-cell { text-align:center; }
+        .price { font-size:18px; font-weight:700; color:#1f2937; }
+        .unit { font-size:12px; color:#6b7280; margin-left:4px; }
+        
+        .stock-cell { text-align:center; }
+        .stock-value { font-size:18px; font-weight:700; color:#1f2937; display:block; }
+        .stock-unit { font-size:12px; color:#6b7280; }
+        
+        .actions-cell { display:flex; gap:8px; justify-content:center; }
+        .action-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; text-decoration:none; font-size:16px; cursor:pointer; border:none; transition:0.3s; }
+        .view-btn { background:#f0f9ff; color:#0284c7; }
+        .view-btn:hover { background:#bfdbfe; }
+        .delete-btn { background:#fee2e2; color:#dc2626; }
+        .delete-btn:hover { background:#fecaca; }
+        
+        .no-products-message { grid-column:1/-1; padding:40px; text-align:center; color:#6b7280; }
+        
+        @media (max-width:1200px) {
+            .admin-product-row { grid-template-columns:70px 1fr 130px 80px 80px 70px; gap:12px; }
+            .product-image-cell img { width:70px; height:70px; }
+        }
+        @media (max-width:768px) {
+            .admin-product-row { grid-template-columns:60px 1fr 60px; gap:12px; }
+            .seller-info-cell, .price-cell, .stock-cell { display:none; }
+            .actions-cell { grid-column:3; }
+        }
+    </style>
 </head>
 <body class="dashboard-page">
 
@@ -207,82 +263,139 @@ if (isset($_GET['edit_id'])) {
     </aside>
 
     <main class="dashboard-main">
-        <section class="products-header">
-            <div class="products-title">
-                <h1>Product Management</h1>
-                <p>View, add, and manage your farm products on the marketplace.</p>
-            </div>
-            <button class="add-product-btn" onclick="openAddModal()">+ Add Product</button>
-        </section>
-
-        <?php if ($message): ?>
-            <div class="success-message"><?php echo htmlspecialchars($message); ?></div>
-        <?php endif; ?>
-
-        <?php if ($error): ?>
-            <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-
-        <section class="products-grid">
-            <?php if (count($products) > 0): ?>
-                <?php foreach ($products as $product): ?>
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
-                        </div>
-                        <div class="product-info">
-                            <?php
-                                $stockValue = (int) $product['stock'];
-                                if ($stockValue === 0) {
-                                    $statusClass = 'out-of-stock';
-                                    $statusLabel = 'Out of Stock';
-                                } elseif ($stockValue <= 10) {
-                                    $statusClass = 'low-stock';
-                                    $statusLabel = 'Low Stock';
-                                } else {
-                                    $statusClass = 'in-stock';
-                                    $statusLabel = 'In Stock';
-                                }
-                            ?>
-                            <div class="product-status <?php echo $statusClass; ?>">
-                                <?php echo $statusLabel; ?>
-                            </div>
-                            <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
-                            <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
-                            <p class="product-desc"><?php echo htmlspecialchars(substr($product['description'], 0, 100)); ?><?php echo strlen($product['description']) > 100 ? '...' : ''; ?></p>
-                            <div class="product-meta">
-                                <div class="product-price">₱<?php echo number_format($product['price'], 2); ?>/kg</div>
-                                <div class="product-stock <?php echo $statusClass; ?>">
-                                    <?php echo $stockValue; ?> kg
-                                </div>
-                            </div>
-                            <div class="product-actions">
-                                <a href="products.php?edit_id=<?php echo (int) $product['id']; ?>" class="btn-edit">✎ Edit</a>
-                                <a href="products.php?delete_id=<?php echo (int) $product['id']; ?>" class="btn-delete" onclick="return confirm('Delete this product?')">🗑 Delete</a>
-                            </div>
-                            <form method="POST" class="stock-adjust-form">
-                                <input type="hidden" name="action" value="adjust_stock">
-                                <input type="hidden" name="product_id" value="<?php echo (int) $product['id']; ?>">
-                                <div class="stock-adjust-actions">
-                                    <button type="submit" name="quick_adjust" value="-10" class="btn-stock-quick btn-stock-minus">-10</button>
-                                    <button type="submit" name="quick_adjust" value="10" class="btn-stock-quick btn-stock-plus">+10</button>
-                                </div>
-                                <div class="stock-custom-group">
-                                    <input type="number" name="adjust_quantity" min="1" placeholder="Add amount" class="stock-amount-input">
-                                    <button type="submit" class="btn-add-stock">Update Stock</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="no-products">
-                    <h2>No products yet</h2>
-                    <p>Add your first product to start selling on the marketplace.</p>
-                    <button class="add-product-btn" onclick="openAddModal()">+ Add Your First Product</button>
+        <?php if ($isAdmin): ?>
+            <section class="products-header">
+                <div class="products-title">
+                    <h1>Product Oversight</h1>
+                    <p>Review all products listed by sellers and search inventory across the platform.</p>
                 </div>
+                <form class="search-bar" method="GET" action="products.php">
+                    <input type="text" name="search" placeholder="Search products..." value="<?php echo htmlspecialchars($adminSearch); ?>">
+                    <button type="submit">Search</button>
+                </form>
+            </section>
+
+            <?php if ($message): ?>
+                <div class="success-message"><?php echo htmlspecialchars($message); ?></div>
             <?php endif; ?>
-        </section>
+
+            <?php if ($error): ?>
+                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <div class="admin-products-grid">
+                <?php if (count($products) > 0): ?>
+                    <?php foreach ($products as $product): ?>
+                        <div class="admin-product-row">
+                            <div class="product-image-cell">
+                                <img src="https://via.placeholder.com/80x80?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                            </div>
+                            <div class="product-details-cell">
+                                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                                <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
+                            </div>
+                            <div class="seller-info-cell">
+                                <p class="farmer-name"><?php echo htmlspecialchars($product['farmer_name'] ?: 'Unknown Seller'); ?></p>
+                                <span class="verified-badge">✓</span>
+                            </div>
+                            <div class="price-cell">
+                                <span class="price">₱<?php echo number_format($product['price'], 2); ?></span>
+                                <span class="unit">/kg</span>
+                            </div>
+                            <div class="stock-cell">
+                                <span class="stock-value"><?php echo (int) $product['stock']; ?></span>
+                                <span class="stock-unit">kg</span>
+                            </div>
+                            <div class="actions-cell">
+                                <a href="#" class="action-btn view-btn" title="View">👁</a>
+                                <a href="#" class="action-btn delete-btn" title="Delete">✕</a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="no-products-message">
+                        <p>No products found.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
+            <section class="products-header">
+                <div class="products-title">
+                    <h1>Product Management</h1>
+                    <p>View, add, and manage your farm products on the marketplace.</p>
+                </div>
+                <button class="add-product-btn" onclick="openAddModal()">+ Add Product</button>
+            </section>
+
+            <?php if ($message): ?>
+                <div class="success-message"><?php echo htmlspecialchars($message); ?></div>
+            <?php endif; ?>
+
+            <?php if ($error): ?>
+                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <section class="products-grid">
+                <?php if (count($products) > 0): ?>
+                    <?php foreach ($products as $product): ?>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                            </div>
+                            <div class="product-info">
+                                <?php
+                                    $stockValue = (int) $product['stock'];
+                                    if ($stockValue === 0) {
+                                        $statusClass = 'out-of-stock';
+                                        $statusLabel = 'Out of Stock';
+                                    } elseif ($stockValue <= 10) {
+                                        $statusClass = 'low-stock';
+                                        $statusLabel = 'Low Stock';
+                                    } else {
+                                        $statusClass = 'in-stock';
+                                        $statusLabel = 'In Stock';
+                                    }
+                                ?>
+                                <div class="product-status <?php echo $statusClass; ?>">
+                                    <?php echo $statusLabel; ?>
+                                </div>
+                                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                                <p class="product-category"><?php echo htmlspecialchars($product['category']); ?></p>
+                                <p class="product-desc"><?php echo htmlspecialchars(substr($product['description'], 0, 100)); ?><?php echo strlen($product['description']) > 100 ? '...' : ''; ?></p>
+                                <div class="product-meta">
+                                    <div class="product-price">₱<?php echo number_format($product['price'], 2); ?>/kg</div>
+                                    <div class="product-stock <?php echo $statusClass; ?>">
+                                        <?php echo $stockValue; ?> kg
+                                    </div>
+                                </div>
+                                <div class="product-actions">
+                                    <a href="products.php?edit_id=<?php echo (int) $product['id']; ?>" class="btn-edit">✎ Edit</a>
+                                    <a href="products.php?delete_id=<?php echo (int) $product['id']; ?>" class="btn-delete" onclick="return confirm('Delete this product?')">🗑 Delete</a>
+                                </div>
+                                <form method="POST" class="stock-adjust-form">
+                                    <input type="hidden" name="action" value="adjust_stock">
+                                    <input type="hidden" name="product_id" value="<?php echo (int) $product['id']; ?>">
+                                    <div class="stock-adjust-actions">
+                                        <button type="submit" name="quick_adjust" value="-10" class="btn-stock-quick btn-stock-minus">-10</button>
+                                        <button type="submit" name="quick_adjust" value="10" class="btn-stock-quick btn-stock-plus">+10</button>
+                                    </div>
+                                    <div class="stock-custom-group">
+                                        <input type="number" name="adjust_quantity" min="1" placeholder="Add amount" class="stock-amount-input">
+                                        <button type="submit" class="btn-add-stock">Update Stock</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="no-products">
+                        <h2>No products yet</h2>
+                        <p>Add your first product to start selling on the marketplace.</p>
+                        <button class="add-product-btn" onclick="openAddModal()">+ Add Your First Product</button>
+                    </div>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
     </main>
 </div>
 
